@@ -45,7 +45,7 @@ public class Main {
       //     System.out.println(String.format("Key: %s, Value: %s", k, v));
       //   }
       // );
-      var response_body = headers.getOrDefault("User-Agent", "");
+      var response_body = headers.getOrDefault("User-Agent", "").strip();
       var repsonse_length = response_body.length();
       sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
     } else {
