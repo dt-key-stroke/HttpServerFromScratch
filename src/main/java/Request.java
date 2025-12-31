@@ -1,5 +1,4 @@
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +26,10 @@ public class Request {
         req.headers = headers;
         req.httpMethod = HttpMethod.byName(request_line[0].strip());
         req.urlPath = url;
-        req.body = new String(requestSplit[requestSplit.length-1].strip().getBytes(Charset.defaultCharset()), Charset.forName("UTF-8"));
+        var cl = req.headers.get("Content-Length");
+        var full_req = requestSplit[requestSplit.length-1];
+        req.body = full_req.substring(0, Integer.parseInt(cl));
+
         return req;
     }
 
@@ -37,7 +39,7 @@ public class Request {
         for (String header : flatHeaders.split("\r\n")) {
             if (header.contains(":")) {
             String[] hVals = header.split(":");
-            headers.put(hVals[0], hVals[1]);
+            headers.put(hVals[0].strip(), hVals[1].strip());
             }
         }
         return headers;
