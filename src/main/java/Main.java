@@ -16,8 +16,11 @@ public class Main {
     var param = url.split("/")[2];
     var response_body = param;
     var repsonse_length = response_body.length();
-
-    sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
+    if (url.startsWith("/echo/")) {
+      sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
+    } else {
+      sendResponse(sock, "HTTP/1.1 404 Not Found\r\n\r\n");
+    }
   }
 
   public static void sendResponse(Socket sock, String content) throws IOException {
