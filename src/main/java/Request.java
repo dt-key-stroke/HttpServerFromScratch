@@ -26,7 +26,7 @@ public class Request {
         req.headers = headers;
         req.httpMethod = HttpMethod.byName(request_line[0].strip());
         req.urlPath = url;
-        var cl = req.headers.get("Content-Length");
+        var cl = req.headers.getOrDefault("Content-Length", "0");
         var full_req = requestSplit[requestSplit.length-1];
         req.body = full_req.substring(0, Integer.parseInt(cl));
 
