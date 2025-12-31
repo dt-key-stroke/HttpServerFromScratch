@@ -46,7 +46,7 @@ public class Main {
         file.setWritable(true);
         try (var pw = new PrintWriter(file)) {
           System.out.println("I'm writing this: " + req.body);
-          pw.write(req.body);
+          pw.print(req.body);
         }
         sendResponse(sock, "HTTP/1.1 201 Created\r\n\r\n");
       }
