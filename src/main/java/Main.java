@@ -1,6 +1,10 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +13,7 @@ import java.util.concurrent.Executors;
 
 
 public class Main {
-  public static ExecutorService es = Executors.newFixedThreadPool(10);
+  public static ExecutorService es = Executors.newFixedThreadPool(1);
   
   public static Map<String, String> parseHeaders(String flatHeaders) {
     // System.out.println("FH: " + flatHeaders);
@@ -23,8 +27,9 @@ public class Main {
     return headers;
   }
 
-  public static void parseRequest(Socket sock) throws IOException {
+  public static void parseRequest(Socket sock, String[] args) throws Exception {
     byte[] buff = new byte[4096];
+    Thread.sleep(3000);
     sock.getInputStream().read(buff);
     var fullRequest = new String(buff);
     var requestSplit = fullRequest.split("\r\n");
@@ -37,8 +42,21 @@ public class Main {
     var url_parts = List.of(url.split("/"));
     if (url.equals("/")) {
       sendResponse(sock, "HTTP/1.1 200 OK\r\n\r\n");
-    }
-    else if (url.startsWith("/echo/") && url_parts.size() == 3) {
+    } else if (url.startsWith("/files/") && url_parts.size() == 3) {
+      String directory = args[2];
+        Path file_path = Path.of(directory + url_parts.get(2));
+        File file = new File(file_path.toUri());
+        if (file.exists() && !file.isDirectory()) {
+          try (var br = new BufferedReader(new FileReader(file))) {
+            var response_body = br.readAllAsString();
+            var repsonse_length = response_body.length();
+            sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));  
+          }
+        } else {
+          notFound(sock);
+        }
+
+    } else if (url.startsWith("/echo/") && url_parts.size() == 3) {
       var param = url.split("/")[2];
       var response_body = param;
       var repsonse_length = response_body.length();
@@ -54,10 +72,13 @@ public class Main {
       var repsonse_length = response_body.length();
       sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
     } else {
-      System.out.print("NO MATCH!");
-      System.out.println(fullRequest);
-      sendResponse(sock, "HTTP/1.1 404 Not Found\r\n\r\n");
+      notFound(sock);
     }
+  }
+
+  public static void notFound(Socket sock) throws IOException {
+    System.out.print("NO MATCH!");
+    sendResponse(sock, "HTTP/1.1 404 Not Found\r\n\r\n");
   }
 
   public static void sendResponse(Socket sock, String content) throws IOException {
@@ -78,9 +99,9 @@ public class Main {
       while (true) {
         Socket recv = serverSocket.accept();
         System.out.println("Got something..."); 
-        Main.es.submit(() -> {
+        Main.es.execute(() -> {
           try {
-            parseRequest(recv);
+            parseRequest(recv, args);
             System.out.println("Sent the response");
           } catch (Exception e) {
             e.printStackTrace();
