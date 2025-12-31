@@ -15,7 +15,10 @@ public class Main {
     System.out.println("Able to split headers");
     String url = request_line[1];
     var url_parts = List.of(url.split("/"));
-    if (url.startsWith("/echo/") && url_parts.size() == 3) {
+    if (url.equals("/")) {
+      sendResponse(sock, "HTTP/1.1 200 OK\r\n\r\n");
+    }
+    else if (url.startsWith("/echo/") && url_parts.size() == 3) {
       var param = url.split("/")[2];
       var response_body = param;
       var repsonse_length = response_body.length();
