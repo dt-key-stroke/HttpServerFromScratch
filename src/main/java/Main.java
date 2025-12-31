@@ -1,8 +1,11 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -42,11 +45,9 @@ public class Main {
         String directory = args[1];
         Path file_path = Path.of(directory + url_parts.get(2));
         Files.createFile(file_path);
-        File file = new File(file_path.toUri());
-        file.setWritable(true);
-        try (var pw = new PrintWriter(file)) {
-          System.out.println("I'm writing this: " + req.body);
-          pw.print(req.body);
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+          new FileOutputStream(file_path.toString()), "utf-8"))) {
+          writer.write(req.body);
         }
         sendResponse(sock, "HTTP/1.1 201 Created\r\n\r\n");
       }
