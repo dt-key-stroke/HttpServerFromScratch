@@ -5,9 +5,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,34 +13,15 @@ import java.util.concurrent.Executors;
 public class Main {
   public static ExecutorService es = Executors.newFixedThreadPool(10);
   
-  public static Map<String, String> parseHeaders(String flatHeaders) {
-    // System.out.println("FH: " + flatHeaders);
-    Map<String, String> headers = new HashMap<>();
-    for (String header : flatHeaders.split("\r\n")) {
-      if (header.contains(":")) {
-        String[] hVals = header.split(":");
-        headers.put(hVals[0], hVals[1]);
-      }
-    }
-    return headers;
-  }
 
   public static void parseRequest(Socket sock, String[] args) throws Exception {
-    byte[] buff = new byte[4096];
-    sock.getInputStream().read(buff);
-    var fullRequest = new String(buff);
-    var requestSplit = fullRequest.split("\r\n");
-    String firstLine = requestSplit[0];
-    Map<String, String> headers = parseHeaders(fullRequest);
-    
-    String[] request_line = firstLine.split(" ");
-    System.out.println("Total split of header: " + request_line.length);
-    String url = request_line[1];
-    var url_parts = List.of(url.split("/"));
-    if (url.equals("/")) {
+    Request req = Request.fromInputStream(sock.getInputStream());
+    var url_parts = List.of(req.urlPath.split("/"));
+
+    if (req.urlPath.equals("/")) {
       sendResponse(sock, "HTTP/1.1 200 OK\r\n\r\n");
-    } else if (url.startsWith("/files/") && url_parts.size() == 3) {
-      System.out.println("Len of args "+List.of(args));
+
+    } else if (req.urlPath.startsWith("/files/") && url_parts.size() == 3) {
       String directory = args[1];
         Path file_path = Path.of(directory + url_parts.get(2));
         File file = new File(file_path.toUri());
@@ -56,19 +35,19 @@ public class Main {
           notFound(sock);
         }
 
-    } else if (url.startsWith("/echo/") && url_parts.size() == 3) {
-      var param = url.split("/")[2];
+    } else if (req.urlPath.startsWith("/echo/") && url_parts.size() == 3) {
+      var param = req.urlPath.split("/")[2];
       var response_body = param;
       var repsonse_length = response_body.length();
       sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
-    } else if (url.equals("/user-agent")) {
+    } else if (req.urlPath.equals("/user-agent")) {
       // System.out.println("At user agent");
       // headers.forEach(
       //   (k, v) -> {
       //     System.out.println(String.format("Key: %s, Value: %s", k, v));
       //   }
       // );
-      var response_body = headers.getOrDefault("User-Agent", "").strip();
+      var response_body = req.headers.getOrDefault("User-Agent", "").strip();
       var repsonse_length = response_body.length();
       sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
     } else {
