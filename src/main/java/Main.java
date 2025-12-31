@@ -1,18 +1,33 @@
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Main {
 
+  public static Map<String, String> parseHeaders(String flatHeaders) {
+    System.out.println("FH: " + flatHeaders);
+    Map<String, String> headers = new HashMap<>();
+    for (String header : flatHeaders.split("\r\n")) {
+      if (header.contains(":")) {
+        String[] hVals = header.split(":");
+        headers.put(hVals[0], hVals[1]);
+      }
+    }
+    return headers;
+  }
+
   public static void parseRequest(Socket sock) throws IOException {
-    // byte[] buff = new byte[20];
-    BufferedReader br = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-    String firstLine = br.readLine();
+    byte[] buff = new byte[4096];
+    sock.getInputStream().read(buff);
+    var fullRequest = new String(buff);
+    var requestSplit = fullRequest.split("\r\n");
+    String firstLine = requestSplit[0];
+    Map<String, String> headers = parseHeaders(fullRequest);
+    
     String[] request_line = firstLine.split(" ");
-    System.out.println("Able to split headers");
     String url = request_line[1];
     var url_parts = List.of(url.split("/"));
     if (url.equals("/")) {
@@ -21,6 +36,16 @@ public class Main {
     else if (url.startsWith("/echo/") && url_parts.size() == 3) {
       var param = url.split("/")[2];
       var response_body = param;
+      var repsonse_length = response_body.length();
+      sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
+    } else if (url.equals("/user-agent")) {
+      System.out.println("At user agent");
+      // headers.forEach(
+      //   (k, v) -> {
+      //     System.out.println(String.format("Key: %s, Value: %s", k, v));
+      //   }
+      // );
+      var response_body = headers.getOrDefault("User-Agent", "");
       var repsonse_length = response_body.length();
       sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
     } else {
