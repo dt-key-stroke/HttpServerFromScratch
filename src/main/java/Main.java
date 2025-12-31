@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 
 public class Main {
 
@@ -13,10 +14,11 @@ public class Main {
     String[] request_line = firstLine.split(" ");
     System.out.println("Able to split headers");
     String url = request_line[1];
-    var param = url.split("/")[2];
-    var response_body = param;
-    var repsonse_length = response_body.length();
-    if (url.startsWith("/echo/")) {
+    var url_parts = List.of(url.split("/"));
+    if (url.startsWith("/echo/") && url_parts.size() == 3) {
+      var param = url.split("/")[2];
+      var response_body = param;
+      var repsonse_length = response_body.length();
       sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
     } else {
       sendResponse(sock, "HTTP/1.1 404 Not Found\r\n\r\n");
