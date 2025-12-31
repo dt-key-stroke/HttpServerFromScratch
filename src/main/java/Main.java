@@ -86,7 +86,6 @@ public class Main {
     try (sock) {
       sock.getOutputStream().write(content.getBytes());
       sock.getOutputStream().flush();
-      sock.close();
     }
     System.out.println("Sent this: " + content);
   }
