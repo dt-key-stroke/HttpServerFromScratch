@@ -2,8 +2,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -22,7 +24,9 @@ public class Main {
       sendResponse(sock, "HTTP/1.1 200 OK\r\n\r\n");
 
     } else if (req.urlPath.startsWith("/files/") && url_parts.size() == 3) {
-      String directory = args[1];
+      if (req.httpMethod.equals(HttpMethod.GET)) {
+
+        String directory = args[1];
         Path file_path = Path.of(directory + url_parts.get(2));
         File file = new File(file_path.toUri());
         if (file.exists() && !file.isDirectory()) {
@@ -34,6 +38,16 @@ public class Main {
         } else {
           notFound(sock);
         }
+      } else if (req.httpMethod.equals(HttpMethod.POST)) {
+        String directory = args[1];
+        Path file_path = Path.of(directory + url_parts.get(2));
+        Files.createFile(file_path);
+        File file = new File(file_path.toUri());
+        file.setWritable(true);
+        try (var pw = new PrintWriter(file)) {
+          pw.write(req.body);
+        }
+      }
 
     } else if (req.urlPath.startsWith("/echo/") && url_parts.size() == 3) {
       var param = req.urlPath.split("/")[2];
