@@ -4,20 +4,32 @@ import java.net.Socket;
 
 public class Main {
   public static void main(String[] args) {
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
-    System.out.println("Logs from your program will appear here!");
+    System.out.println("Starting the server...");
 
-    // TODO: Uncomment the code below to pass the first stage
-    
     try {
       ServerSocket serverSocket = new ServerSocket(4221);
     
-      // Since the tester restarts your program quite often, setting SO_REUSEADDR
-      // ensures that we don't run into 'Address already in use' errors
       serverSocket.setReuseAddress(true);
     
-      serverSocket.accept(); // Wait for connection from client.
-      System.out.println("accepted new connection");
+      Socket recv = serverSocket.accept(); // Wait for connection from client.
+      System.out.println("Got something...");
+      byte[] buff = new byte[20];
+      recv.getInputStream().read(buff);
+      String request = new String(buff);
+      System.out.println("got a str");
+      String[] split_request = request.split("\r\n");
+      String[] request_line = split_request[0].split(" ");
+      String url = request_line[1];
+
+      System.out.println("inp_str: " + request);
+      System.out.println("req_line: " + request_line);
+      System.out.println("req_split: " + split_request);
+      if(url.equals("/")) {
+        recv.getOutputStream().write("HTTP/1.1 200 OK\r\n\r\n".getBytes());
+      } else {
+        recv.getOutputStream().write("HTTP/1.1 404 Not Found\r\n\r\n".getBytes());
+      }
+      System.out.println("Sent the response connection");
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
     }
