@@ -29,7 +29,6 @@ public class Main {
 
   public static void parseRequest(Socket sock, String[] args) throws Exception {
     byte[] buff = new byte[4096];
-    Thread.sleep(3000);
     sock.getInputStream().read(buff);
     var fullRequest = new String(buff);
     var requestSplit = fullRequest.split("\r\n");
