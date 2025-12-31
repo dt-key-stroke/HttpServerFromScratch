@@ -43,7 +43,8 @@ public class Main {
     if (url.equals("/")) {
       sendResponse(sock, "HTTP/1.1 200 OK\r\n\r\n");
     } else if (url.startsWith("/files/") && url_parts.size() == 3) {
-      String directory = args[2];
+      System.out.println("Len of args "+List.of(args));
+      String directory = args[1];
         Path file_path = Path.of(directory + url_parts.get(2));
         File file = new File(file_path.toUri());
         if (file.exists() && !file.isDirectory()) {
@@ -85,6 +86,7 @@ public class Main {
     try (sock) {
       sock.getOutputStream().write(content.getBytes());
       sock.getOutputStream().flush();
+      sock.close();
     }
     System.out.println("Sent this: " + content);
   }
