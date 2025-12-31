@@ -47,6 +47,7 @@ public class Main {
         try (var pw = new PrintWriter(file)) {
           pw.write(req.body);
         }
+        sendResponse(sock, "HTTP/1.1 201 Created");
       }
 
     } else if (req.urlPath.startsWith("/echo/") && url_parts.size() == 3) {
