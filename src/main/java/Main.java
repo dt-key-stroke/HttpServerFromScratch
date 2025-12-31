@@ -61,10 +61,10 @@ public class Main {
   }
 
   public static void sendResponse(Socket sock, String content) throws IOException {
-    sock.getOutputStream().write(content.getBytes());
-    sock.getOutputStream().flush();
-    sock.getOutputStream().close();
-    System.out.println("Socket state: " + sock.isClosed());
+    try (sock) {
+      sock.getOutputStream().write(content.getBytes());
+      sock.getOutputStream().flush();
+    }
     System.out.println("Sent this: " + content);
   }
 
@@ -77,16 +77,15 @@ public class Main {
       serverSocket.setReuseAddress(true);
       while (true) {
         Socket recv = serverSocket.accept();
+        System.out.println("Got something..."); 
         Main.es.submit(() -> {
           try {
-            System.out.println("Got something..."); 
             parseRequest(recv);
             System.out.println("Sent the response");
           } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
           }
         });
-        parseRequest(recv);
       }
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
