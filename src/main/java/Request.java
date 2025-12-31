@@ -1,4 +1,5 @@
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,7 +27,7 @@ public class Request {
         req.headers = headers;
         req.httpMethod = HttpMethod.byName(request_line[0].strip());
         req.urlPath = url;
-        req.body = requestSplit[requestSplit.length-1];
+        req.body = new String(requestSplit[requestSplit.length-1].strip().getBytes(Charset.defaultCharset()), Charset.forName("UTF-8"));
         return req;
     }
 
