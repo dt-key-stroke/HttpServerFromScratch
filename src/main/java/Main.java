@@ -4,11 +4,15 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 
 public class Main {
-
+  public static ExecutorService es = Executors.newFixedThreadPool(10);
+  
   public static Map<String, String> parseHeaders(String flatHeaders) {
-    System.out.println("FH: " + flatHeaders);
+    // System.out.println("FH: " + flatHeaders);
     Map<String, String> headers = new HashMap<>();
     for (String header : flatHeaders.split("\r\n")) {
       if (header.contains(":")) {
@@ -28,6 +32,7 @@ public class Main {
     Map<String, String> headers = parseHeaders(fullRequest);
     
     String[] request_line = firstLine.split(" ");
+    System.out.println("Total split of header: " + request_line.length);
     String url = request_line[1];
     var url_parts = List.of(url.split("/"));
     if (url.equals("/")) {
@@ -39,7 +44,7 @@ public class Main {
       var repsonse_length = response_body.length();
       sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
     } else if (url.equals("/user-agent")) {
-      System.out.println("At user agent");
+      // System.out.println("At user agent");
       // headers.forEach(
       //   (k, v) -> {
       //     System.out.println(String.format("Key: %s, Value: %s", k, v));
@@ -49,12 +54,15 @@ public class Main {
       var repsonse_length = response_body.length();
       sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
     } else {
+      System.out.print("NO MATCH!");
+      System.out.println(fullRequest);
       sendResponse(sock, "HTTP/1.1 404 Not Found\r\n\r\n");
     }
   }
 
   public static void sendResponse(Socket sock, String content) throws IOException {
     sock.getOutputStream().write(content.getBytes());
+    System.out.println("Sent this: " + content);
   }
 
   public static void main(String[] args) throws IOException {
@@ -64,12 +72,19 @@ public class Main {
       serverSocket = new ServerSocket(4221);
     
       serverSocket.setReuseAddress(true);
-    
-      Socket recv = serverSocket.accept();
-      System.out.println("Got something...");
-
-      parseRequest(recv);
-      System.out.println("Sent the response connection");
+      while (true) {
+        Socket recv = serverSocket.accept();
+        System.out.println("Got something..."); 
+        Main.es.submit(() -> {
+          try {
+            parseRequest(recv);
+            System.out.println("Sent the response");
+          } catch (Exception e) {
+            System.out.println(e);
+          }
+        });
+        parseRequest(recv);
+      }
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
     } finally {
