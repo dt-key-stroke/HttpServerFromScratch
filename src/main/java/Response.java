@@ -9,7 +9,7 @@ public class Response {
     private int status;
     private String statusMessage;
     private Map<String, String> headers;
-    private String responseBody;
+    private String responseBody = "";
 
     public String toFlatResponse() {
         String flatHeaders = "";

@@ -30,22 +30,23 @@ public class Main {
         res.setStatus(200);
         res.setStatusMessage("OK");
         sendResponse(sock, res.toFlatResponse());
-    } else if (req.urlPath.startsWith("/files/") && url_parts.size() == 3) {
-      if (req.httpMethod.equals(HttpMethod.GET)) {
-
-        String directory = args[1];
-        Path file_path = Path.of(directory + url_parts.get(2));
-        File file = new File(file_path.toUri());
-        if (file.exists() && !file.isDirectory()) {
-          try (var br = new BufferedReader(new FileReader(file))) {
-            var response_body = br.readAllAsString();
-            var repsonse_length = response_body.length();
-            Response res = new Response();
-            res.setHeaders(Map.of(
-              "Content-Type", "application/octet-stream", 
-              "Content-Length", String.valueOf(repsonse_length)
+      } else if (req.urlPath.startsWith("/files/") && url_parts.size() == 3) {
+        if (req.httpMethod.equals(HttpMethod.GET)) {
+          
+          String directory = args[1];
+          Path file_path = Path.of(directory + url_parts.get(2));
+          File file = new File(file_path.toUri());
+          if (file.exists() && !file.isDirectory()) {
+            try (var br = new BufferedReader(new FileReader(file))) {
+              var response_body = br.readAllAsString();
+              var repsonse_length = response_body.length();
+              Response res = new Response();
+              res.setHeaders(Map.of(
+                "Content-Type", "application/octet-stream", 
+                "Content-Length", String.valueOf(repsonse_length)
               )
             );
+            res.setHttpVersion(req.httpVersion);
             res.setStatus(200);
             res.setStatusMessage("OK");
             res.setResponseBody(response_body);
@@ -60,32 +61,34 @@ public class Main {
         Files.createFile(file_path);
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
           new FileOutputStream(file_path.toString()), "utf-8"))) {
-          writer.write(req.body);
+            writer.write(req.body);
+          }
+          Response res = new Response();
+          res.setHttpVersion(req.httpVersion);
+          res.setStatus(201);
+          res.setStatusMessage("Created");
+          sendResponse(sock, res.toFlatResponse());
         }
+        
+      } else if (req.urlPath.startsWith("/echo/") && url_parts.size() == 3) {
+        var param = req.urlPath.split("/")[2];
+        var response_body = param;
+        var repsonse_length = response_body.length();
+        var req_enc = req.headers.get("Accept-Encoding");
         Response res = new Response();
-        res.setHttpVersion(req.httpVersion);
-        res.setStatus(201);
-        res.setStatusMessage("Created");
-        sendResponse(sock, res.toFlatResponse());
-      }
-
-    } else if (req.urlPath.startsWith("/echo/") && url_parts.size() == 3) {
-      var param = req.urlPath.split("/")[2];
-      var response_body = param;
-      var repsonse_length = response_body.length();
-      var req_enc = req.headers.get("Accept-Encoding");
-      Response res = new Response();
-      res.setHeaders(Map.of(
-        "Content-Type", "text/plain", 
-        "Content-Length", String.valueOf(repsonse_length)
+        res.setHeaders(Map.of(
+          "Content-Type", "text/plain", 
+          "Content-Length", String.valueOf(repsonse_length)
         )
       );
       if (req_enc != null && req_enc.equals("gzip")) {
         res.getHeaders().put("Content-Encoding", req_enc);
       }
+      res.setHttpVersion(req.httpVersion);
       res.setStatus(200);
       res.setStatusMessage("OK");
       res.setResponseBody(response_body);
+      System.out.println("RESPONSE: " + res.toFlatResponse());
       sendResponse(sock, res.toFlatResponse());
     } else if (req.urlPath.equals("/user-agent")) {
       var response_body = req.headers.getOrDefault("User-Agent", "").strip();
@@ -96,6 +99,7 @@ public class Main {
         "Content-Length", String.valueOf(repsonse_length)
         )
       );
+      res.setHttpVersion(req.httpVersion);
       res.setStatus(200);
       res.setStatusMessage("OK");
       res.setResponseBody(response_body);
