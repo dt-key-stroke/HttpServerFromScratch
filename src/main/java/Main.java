@@ -85,17 +85,19 @@ public class Main {
           "Content-Length", String.valueOf(repsonse_length)
         ));
         res.setHeaders(m);
+        res.setHttpVersion(req.httpVersion);
+        res.setStatus(200);
+        res.setStatusMessage("OK");
       if (req_enc.contains("gzip")) {
         res.addHeader("Content-Encoding", "gzip");
         byte[] compressed_payload = Compression.gzip(response_body);
-        res.setResponseBody(Compression.toHex(compressed_payload));
+        res.setResponseBody("");
         res.addHeader("Content-Length", String.valueOf(compressed_payload.length * 2));
+        sendResponse(sock, Misc.concat(res.toFlatResponse().getBytes(), compressed_payload));
+        return;
       } else {
         res.setResponseBody(response_body);
       }
-      res.setHttpVersion(req.httpVersion);
-      res.setStatus(200);
-      res.setStatusMessage("OK");
       System.out.println("RESPONSE: " + res.toFlatResponse());
       sendResponse(sock, res.toFlatResponse());
     } else if (req.urlPath.equals("/user-agent")) {
@@ -127,7 +129,13 @@ public class Main {
       sock.getOutputStream().write(content.getBytes());
       sock.getOutputStream().flush();
     }
-    System.out.println("Sent this: " + content);
+  }
+
+  public static void sendResponse(Socket sock, byte[] content) throws IOException {
+    try (sock) {
+      sock.getOutputStream().write(content);
+      sock.getOutputStream().flush();
+    }
   }
 
   public static void main(String[] args) throws IOException {
