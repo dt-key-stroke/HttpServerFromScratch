@@ -89,7 +89,7 @@ public class Main {
         res.addHeader("Content-Encoding", "gzip");
         byte[] compressed_payload = Compression.gzip(response_body);
         res.setResponseBody(Compression.toHex(compressed_payload));
-        res.addHeader("Content-Length", String.valueOf(compressed_payload.length));
+        res.addHeader("Content-Length", String.valueOf(compressed_payload.length * 2));
       } else {
         res.setResponseBody(response_body);
       }
