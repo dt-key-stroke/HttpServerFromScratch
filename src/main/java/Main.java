@@ -10,6 +10,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -76,11 +77,12 @@ public class Main {
         var repsonse_length = response_body.length();
         var req_enc = req.headers.get("Accept-Encoding");
         Response res = new Response();
-        res.setHeaders(Map.of(
+        Map m = new HashMap<>();
+        m.putAll(Map.of(
           "Content-Type", "text/plain", 
           "Content-Length", String.valueOf(repsonse_length)
-        )
-      );
+        ));
+        res.setHeaders(m);
       if (req_enc != null && req_enc.equals("gzip")) {
         res.addHeader("Content-Encoding", req_enc);
       }
