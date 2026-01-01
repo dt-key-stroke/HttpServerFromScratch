@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,8 +25,11 @@ public class Main {
     var url_parts = List.of(req.urlPath.split("/"));
 
     if (req.urlPath.equals("/")) {
-      sendResponse(sock, "HTTP/1.1 200 OK\r\n\r\n");
-
+        Response res = new Response();
+        res.setHttpVersion(req.httpVersion);
+        res.setStatus(200);
+        res.setStatusMessage("OK");
+        sendResponse(sock, res.toFlatResponse());
     } else if (req.urlPath.startsWith("/files/") && url_parts.size() == 3) {
       if (req.httpMethod.equals(HttpMethod.GET)) {
 
@@ -36,7 +40,16 @@ public class Main {
           try (var br = new BufferedReader(new FileReader(file))) {
             var response_body = br.readAllAsString();
             var repsonse_length = response_body.length();
-            sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));  
+            Response res = new Response();
+            res.setHeaders(Map.of(
+              "Content-Type", "application/octet-stream", 
+              "Content-Length", String.valueOf(repsonse_length)
+              )
+            );
+            res.setStatus(200);
+            res.setStatusMessage("OK");
+            res.setResponseBody(response_body);
+            sendResponse(sock, res.toFlatResponse());  
           }
         } else {
           notFound(sock);
@@ -49,24 +62,44 @@ public class Main {
           new FileOutputStream(file_path.toString()), "utf-8"))) {
           writer.write(req.body);
         }
-        sendResponse(sock, "HTTP/1.1 201 Created\r\n\r\n");
+        Response res = new Response();
+        res.setHttpVersion(req.httpVersion);
+        res.setStatus(201);
+        res.setStatusMessage("Created");
+        sendResponse(sock, res.toFlatResponse());
       }
 
     } else if (req.urlPath.startsWith("/echo/") && url_parts.size() == 3) {
       var param = req.urlPath.split("/")[2];
       var response_body = param;
       var repsonse_length = response_body.length();
-      sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
+      var req_enc = req.headers.get("Accept-Encoding");
+      Response res = new Response();
+      res.setHeaders(Map.of(
+        "Content-Type", "text/plain", 
+        "Content-Length", String.valueOf(repsonse_length)
+        )
+      );
+      if (req_enc != null && req_enc.equals("gzip")) {
+        res.getHeaders().put("Content-Encoding", req_enc);
+      }
+      res.setStatus(200);
+      res.setStatusMessage("OK");
+      res.setResponseBody(response_body);
+      sendResponse(sock, res.toFlatResponse());
     } else if (req.urlPath.equals("/user-agent")) {
-      // System.out.println("At user agent");
-      // headers.forEach(
-      //   (k, v) -> {
-      //     System.out.println(String.format("Key: %s, Value: %s", k, v));
-      //   }
-      // );
       var response_body = req.headers.getOrDefault("User-Agent", "").strip();
       var repsonse_length = response_body.length();
-      sendResponse(sock, String.format("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %s\r\n\r\n%s", repsonse_length, response_body));
+      Response res = new Response();
+      res.setHeaders(Map.of(
+        "Content-Type", "text/plain", 
+        "Content-Length", String.valueOf(repsonse_length)
+        )
+      );
+      res.setStatus(200);
+      res.setStatusMessage("OK");
+      res.setResponseBody(response_body);
+      sendResponse(sock, res.toFlatResponse());
     } else {
       notFound(sock);
     }
