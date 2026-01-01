@@ -125,10 +125,8 @@ public class Main {
   }
 
   public static void sendResponse(Socket sock, String content) throws IOException {
-    try (sock) {
-      sock.getOutputStream().write(content.getBytes());
-      sock.getOutputStream().flush();
-    }
+    sock.getOutputStream().write(content.getBytes());
+    sock.getOutputStream().flush();
   }
 
   public static void sendResponse(Socket sock, byte[] content) throws IOException {
