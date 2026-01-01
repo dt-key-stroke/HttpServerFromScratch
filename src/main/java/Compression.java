@@ -12,7 +12,7 @@ public class Compression {
     }
 
 
-    public static String gzip(String payload) throws IOException {
+    public static byte[] gzip(String payload) throws IOException {
         var uncompressedData = payload.getBytes();
         ByteArrayOutputStream bos = null;
         GZIPOutputStream gzipOS = null;
@@ -21,7 +21,7 @@ public class Compression {
             gzipOS = new GZIPOutputStream(bos);
             gzipOS.write(uncompressedData);
             gzipOS.close();
-            return toHex(bos.toByteArray());
+            return (bos.toByteArray());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -35,12 +35,7 @@ public class Compression {
             catch (Exception ignored) {
             }
         }
-        return "";
-    }
-
-    public static void main() throws IOException {
-        var res = Compression.gzip("paaineapple");
-        System.out.println(res);
+        return new byte[] {};
     }
 
 }
