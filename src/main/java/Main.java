@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 
 public class Main {
@@ -75,16 +76,17 @@ public class Main {
         var param = req.urlPath.split("/")[2];
         var response_body = param;
         var repsonse_length = response_body.length();
-        var req_enc = req.headers.get("Accept-Encoding");
+        List<String> req_enc = List.of(req.headers.getOrDefault("Accept-Encoding", "").split(","));
+        req_enc = req_enc.stream().map(String::strip).collect(Collectors.toList());
         Response res = new Response();
-        Map m = new HashMap<>();
+        Map<String, String> m = new HashMap<>();
         m.putAll(Map.of(
           "Content-Type", "text/plain", 
           "Content-Length", String.valueOf(repsonse_length)
         ));
         res.setHeaders(m);
-      if (req_enc != null && req_enc.equals("gzip")) {
-        res.addHeader("Content-Encoding", req_enc);
+      if (req_enc.contains("gzip")) {
+        res.addHeader("Content-Encoding", "gzip");
       }
       res.setHttpVersion(req.httpVersion);
       res.setStatus(200);
