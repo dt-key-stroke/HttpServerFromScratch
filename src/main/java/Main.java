@@ -87,8 +87,8 @@ public class Main {
         res.setHeaders(m);
       if (req_enc.contains("gzip")) {
         res.addHeader("Content-Encoding", "gzip");
-        byte[] compressed_payload = Compression.gzip(response_body);
-        res.setResponseBody(new String(compressed_payload));
+        String compressed_payload = Compression.gzip(response_body);
+        res.setResponseBody(compressed_payload);
       } else {
         res.setResponseBody(response_body);
       }

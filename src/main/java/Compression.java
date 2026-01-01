@@ -6,7 +6,7 @@ import java.util.zip.GZIPOutputStream;
 public class Compression {
     private static final int BUFFER_SIZE = 512;
 
-    public static byte[] gzip(String payload) throws IOException {
+    public static String gzip(String payload) throws IOException {
         ByteArrayInputStream is = new ByteArrayInputStream(payload.getBytes());
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         try (GZIPOutputStream gzipOs = new GZIPOutputStream(os)) {
@@ -16,8 +16,13 @@ public class Compression {
                 gzipOs.write(buffer, 0, bytesRead);
             }
         }
-        byte[] compressed = os.toByteArray();
+        String compressed = os.toString();
         return compressed;
+    }
+
+    public static void test() throws IOException {
+        var res = Compression.gzip("pineapple");
+        System.out.println(res);
     }
 
 }
