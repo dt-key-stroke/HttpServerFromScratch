@@ -92,7 +92,7 @@ public class Main {
         res.addHeader("Content-Encoding", "gzip");
         byte[] compressed_payload = Compression.gzip(response_body);
         res.setResponseBody("");
-        res.addHeader("Content-Length", String.valueOf(compressed_payload.length * 2));
+        res.addHeader("Content-Length", String.valueOf(compressed_payload.length));
         sendResponse(sock, Misc.concat(res.toFlatResponse().getBytes(), compressed_payload));
         return;
       } else {
