@@ -82,7 +82,7 @@ public class Main {
         )
       );
       if (req_enc != null && req_enc.equals("gzip")) {
-        res.getHeaders().put("Content-Encoding", req_enc);
+        res.addHeader("Content-Encoding", req_enc);
       }
       res.setHttpVersion(req.httpVersion);
       res.setStatus(200);

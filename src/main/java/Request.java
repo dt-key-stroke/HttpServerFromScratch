@@ -2,15 +2,53 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import lombok.Data;
-
-@Data
 public class Request {
     HttpMethod httpMethod;
     String httpVersion;
     Map<String, String> headers;
     String urlPath;
     String body;
+
+    // Getters and Setters
+    public HttpMethod getHttpMethod() {
+        return httpMethod;
+    }
+
+    public void setHttpMethod(HttpMethod httpMethod) {
+        this.httpMethod = httpMethod;
+    }
+
+    public String getHttpVersion() {
+        return httpVersion;
+    }
+
+    public void setHttpVersion(String httpVersion) {
+        this.httpVersion = httpVersion;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(Map<String, String> headers) {
+        this.headers = headers;
+    }
+
+    public String getUrlPath() {
+        return urlPath;
+    }
+
+    public void setUrlPath(String urlPath) {
+        this.urlPath = urlPath;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
+    }
 
     public static Request fromInputStream(InputStream is) throws Exception {
         byte[] buff = new byte[4096];
@@ -34,7 +72,7 @@ public class Request {
         return req;
     }
 
-    protected  static Map<String, String> parseHeaders(String flatHeaders) {
+    private static Map<String, String> parseHeaders(String flatHeaders) {
         // System.out.println("FH: " + flatHeaders);
         Map<String, String> headers = new HashMap<>();
         for (String header : flatHeaders.split("\r\n")) {
@@ -45,5 +83,6 @@ public class Request {
         }
         return headers;
     }
+
 
 }
