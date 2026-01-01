@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
 
 
 public class Main {
@@ -87,11 +89,15 @@ public class Main {
         res.setHeaders(m);
       if (req_enc.contains("gzip")) {
         res.addHeader("Content-Encoding", "gzip");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        GZIPOutputStream gzos = new GZIPOutputStream(baos);
+        gzos.write(response_body.getBytes());
+      } else {
+        res.setResponseBody(response_body);
       }
       res.setHttpVersion(req.httpVersion);
       res.setStatus(200);
       res.setStatusMessage("OK");
-      res.setResponseBody(response_body);
       System.out.println("RESPONSE: " + res.toFlatResponse());
       sendResponse(sock, res.toFlatResponse());
     } else if (req.urlPath.equals("/user-agent")) {
