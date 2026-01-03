@@ -24,78 +24,70 @@ public class Main {
 
   public static void parseRequest(Socket sock, String[] args) throws Exception {
     Request req = Request.fromInputStream(sock.getInputStream());
-    if ("close".equalsIgnoreCase(req.headers.get("Connection"))) {
-      sock.close();
-    } else {
-      sock.setKeepAlive(true);
-      // sock.shutdownInput();
-      // sock.shutdownOutput();
-      System.out.println("Keep connection alive");
-    }
     var url_parts = List.of(req.urlPath.split("/"));
-
+    
     if (req.urlPath.equals("/")) {
-        Response res = new Response();
-        res.setHttpVersion(req.httpVersion);
-        res.setStatus(200);
-        res.setStatusMessage("OK");
-        sendResponse(sock, res.toFlatResponse());
-      } else if (req.urlPath.startsWith("/files/") && url_parts.size() == 3) {
-        if (req.httpMethod.equals(HttpMethod.GET)) {
-          
-          String directory = args[1];
-          Path file_path = Path.of(directory + url_parts.get(2));
-          File file = new File(file_path.toUri());
-          if (file.exists() && !file.isDirectory()) {
-            try (var br = new BufferedReader(new FileReader(file))) {
-              var response_body = br.readAllAsString();
-              var repsonse_length = response_body.length();
-              Response res = new Response();
-              res.setHeaders(Map.of(
-                "Content-Type", "application/octet-stream", 
-                "Content-Length", String.valueOf(repsonse_length)
-              )
-            );
-            res.setHttpVersion(req.httpVersion);
-            res.setStatus(200);
-            res.setStatusMessage("OK");
-            res.setResponseBody(response_body);
-            sendResponse(sock, res.toFlatResponse());  
-          }
-        } else {
-          notFound(sock);
-        }
-      } else if (req.httpMethod.equals(HttpMethod.POST)) {
+      Response res = new Response();
+      res.setHttpVersion(req.httpVersion);
+      res.setStatus(200);
+      res.setStatusMessage("OK");
+      sendResponse(sock, res.toFlatResponse());
+    } else if (req.urlPath.startsWith("/files/") && url_parts.size() == 3) {
+      if (req.httpMethod.equals(HttpMethod.GET)) {
+        
         String directory = args[1];
         Path file_path = Path.of(directory + url_parts.get(2));
-        Files.createFile(file_path);
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-          new FileOutputStream(file_path.toString()), "utf-8"))) {
-            writer.write(req.body);
-          }
-          Response res = new Response();
+        File file = new File(file_path.toUri());
+        if (file.exists() && !file.isDirectory()) {
+          try (var br = new BufferedReader(new FileReader(file))) {
+            var response_body = br.readAllAsString();
+            var repsonse_length = response_body.length();
+            Response res = new Response();
+            res.setHeaders(Map.of(
+              "Content-Type", "application/octet-stream", 
+              "Content-Length", String.valueOf(repsonse_length)
+            )
+          );
           res.setHttpVersion(req.httpVersion);
-          res.setStatus(201);
-          res.setStatusMessage("Created");
-          sendResponse(sock, res.toFlatResponse());
+          res.setStatus(200);
+          res.setStatusMessage("OK");
+          res.setResponseBody(response_body);
+          sendResponse(sock, res.toFlatResponse());  
         }
-        
-      } else if (req.urlPath.startsWith("/echo/") && url_parts.size() == 3) {
-        var param = req.urlPath.split("/")[2];
-        var response_body = param;
-        var repsonse_length = response_body.length();
-        List<String> req_enc = List.of(req.headers.getOrDefault("Accept-Encoding", "").split(","));
-        req_enc = req_enc.stream().map(String::strip).collect(Collectors.toList());
+      } else {
+        notFound(sock);
+      }
+    } else if (req.httpMethod.equals(HttpMethod.POST)) {
+      String directory = args[1];
+      Path file_path = Path.of(directory + url_parts.get(2));
+      Files.createFile(file_path);
+      try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+        new FileOutputStream(file_path.toString()), "utf-8"))) {
+          writer.write(req.body);
+        }
         Response res = new Response();
-        Map<String, String> m = new HashMap<>();
-        m.putAll(Map.of(
-          "Content-Type", "text/plain", 
-          "Content-Length", String.valueOf(repsonse_length)
-        ));
-        res.setHeaders(m);
         res.setHttpVersion(req.httpVersion);
-        res.setStatus(200);
-        res.setStatusMessage("OK");
+        res.setStatus(201);
+        res.setStatusMessage("Created");
+        sendResponse(sock, res.toFlatResponse());
+      }
+      
+    } else if (req.urlPath.startsWith("/echo/") && url_parts.size() == 3) {
+      var param = req.urlPath.split("/")[2];
+      var response_body = param;
+      var repsonse_length = response_body.length();
+      List<String> req_enc = List.of(req.headers.getOrDefault("Accept-Encoding", "").split(","));
+      req_enc = req_enc.stream().map(String::strip).collect(Collectors.toList());
+      Response res = new Response();
+      Map<String, String> m = new HashMap<>();
+      m.putAll(Map.of(
+        "Content-Type", "text/plain", 
+        "Content-Length", String.valueOf(repsonse_length)
+      ));
+      res.setHeaders(m);
+      res.setHttpVersion(req.httpVersion);
+      res.setStatus(200);
+      res.setStatusMessage("OK");
       if (req_enc.contains("gzip")) {
         res.addHeader("Content-Encoding", "gzip");
         byte[] compressed_payload = Compression.gzip(response_body);
@@ -115,21 +107,29 @@ public class Main {
       res.setHeaders(Map.of(
         "Content-Type", "text/plain", 
         "Content-Length", String.valueOf(repsonse_length)
-        )
-      );
-      res.setHttpVersion(req.httpVersion);
-      res.setStatus(200);
-      res.setStatusMessage("OK");
-      res.setResponseBody(response_body);
-      sendResponse(sock, res.toFlatResponse());
-    } else {
-      notFound(sock);
-    }
-
-    
+      )
+    );
+    res.setHttpVersion(req.httpVersion);
+    res.setStatus(200);
+    res.setStatusMessage("OK");
+    res.setResponseBody(response_body);
+    sendResponse(sock, res.toFlatResponse());
+  } else {
+    notFound(sock);
   }
+  if ("close".equalsIgnoreCase(req.headers.get("Connection"))) {
+    sock.close();
+  } else {
+    sock.setKeepAlive(true);
+    // sock.shutdownInput();
+    // sock.shutdownOutput();
+    System.out.println("Keep connection alive");
+  }
+  
+  
+}
 
-  public static void notFound(Socket sock) throws IOException {
+public static void notFound(Socket sock) throws IOException {
     System.out.print("NO MATCH!");
     sendResponse(sock, "HTTP/1.1 404 Not Found\r\n\r\n");
   }
