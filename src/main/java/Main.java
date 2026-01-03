@@ -150,6 +150,7 @@ public static void notFound(Socket sock) throws IOException {
   }
 
   public static void sendResponse(Socket sock, String content) throws IOException {
+    System.out.println("RESPONSE: " + content);
     sock.getOutputStream().write(content.getBytes());
     sock.getOutputStream().flush();
   }
