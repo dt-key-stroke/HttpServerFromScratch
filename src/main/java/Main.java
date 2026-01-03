@@ -122,8 +122,8 @@ public class Main {
       sock.close();
     } else {
       sock.setKeepAlive(true);
-      sock.shutdownInput();
-      sock.shutdownOutput();
+      // sock.shutdownInput();
+      // sock.shutdownOutput();
       System.out.println("Keep connection alive");
     }
   }
