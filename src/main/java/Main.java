@@ -31,6 +31,9 @@ public class Main {
       res.setHttpVersion(req.httpVersion);
       res.setStatus(200);
       res.setStatusMessage("OK");
+      if (req.headers.containsKey("Connection")) {
+        res.addHeader("Connection", req.headers.get("Connection"));
+      }
       sendResponse(sock, res.toFlatResponse());
     } else if (req.urlPath.startsWith("/files/") && url_parts.size() == 3) {
       if (req.httpMethod.equals(HttpMethod.GET)) {
@@ -52,6 +55,9 @@ public class Main {
           res.setStatus(200);
           res.setStatusMessage("OK");
           res.setResponseBody(response_body);
+          if (req.headers.containsKey("Connection")) {
+            res.addHeader("Connection", req.headers.get("Connection"));
+          }
           sendResponse(sock, res.toFlatResponse());  
         }
       } else {
@@ -69,6 +75,9 @@ public class Main {
         res.setHttpVersion(req.httpVersion);
         res.setStatus(201);
         res.setStatusMessage("Created");
+        if (req.headers.containsKey("Connection")) {
+          res.addHeader("Connection", req.headers.get("Connection"));
+        }
         sendResponse(sock, res.toFlatResponse());
       }
       
@@ -97,6 +106,9 @@ public class Main {
       } else {
         res.setResponseBody(response_body);
       }
+      if (req.headers.containsKey("Connection")) {
+        res.addHeader("Connection", req.headers.get("Connection"));
+      }
       System.out.println("RESPONSE: " + res.toFlatResponse());
       sendResponse(sock, res.toFlatResponse());
     } else if (req.urlPath.equals("/user-agent")) {
@@ -112,6 +124,9 @@ public class Main {
     res.setStatus(200);
     res.setStatusMessage("OK");
     res.setResponseBody(response_body);
+    if (req.headers.containsKey("Connection")) {
+      res.addHeader("Connection", req.headers.get("Connection"));
+    }
     sendResponse(sock, res.toFlatResponse());
   } else {
     notFound(sock);
