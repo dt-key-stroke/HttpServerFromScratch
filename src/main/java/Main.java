@@ -145,7 +145,7 @@ public class Main {
         System.out.println("Got something..."); 
         Main.es.execute(() -> {
           try {
-            while (!recv.isInputShutdown()) {
+            while (!recv.isClosed() && recv.isConnected()) {
               parseRequest(recv, args);
               System.out.println("Sent the response");
               recv.shutdownInput();
