@@ -121,6 +121,9 @@ public class Main {
     if ("close".equalsIgnoreCase(req.headers.get("Connection"))) {
       sock.close();
     } else {
+      sock.setKeepAlive(true);
+      sock.shutdownInput();
+      sock.shutdownOutput();
       System.out.println("Keep connection alive");
     }
   }
