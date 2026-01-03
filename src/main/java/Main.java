@@ -117,6 +117,12 @@ public class Main {
     } else {
       notFound(sock);
     }
+
+    if ("close".equalsIgnoreCase(req.headers.get("Connection"))) {
+      sock.close();
+    } else {
+      System.out.println("Keep connection alive");
+    }
   }
 
   public static void notFound(Socket sock) throws IOException {
@@ -148,8 +154,7 @@ public class Main {
             while (!recv.isClosed() && recv.isConnected()) {
               parseRequest(recv, args);
               System.out.println("Sent the response");
-              // recv.shutdownInput();
-              // recv.shutdownOutput();
+              
             }
           } catch (Exception e) {
             e.printStackTrace();
