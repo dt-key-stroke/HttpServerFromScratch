@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 
 public class Main {
-  public static ExecutorService es = Executors.newFixedThreadPool(1);
+  public static ExecutorService es = Executors.newFixedThreadPool(10);
   
 
   public static void parseRequest(Socket sock, String[] args) throws Exception {
