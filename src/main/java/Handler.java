@@ -18,12 +18,16 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 
-public class Main {
+public class Handler {
   public static ExecutorService es = Executors.newFixedThreadPool(10);
   
 
   public static boolean parseRequest(Socket sock, String[] args) throws Exception {
     Request req = Request.fromInputStream(sock.getInputStream());
+    if (req == null) {
+      sock.close();
+      return true;
+    }
     var url_parts = List.of(req.urlPath.split("/"));
     
     if (req.urlPath.equals("/")) {
@@ -169,7 +173,7 @@ public static void notFound(Socket sock) throws IOException {
         
         Socket recv = serverSocket.accept();
         System.out.println("Got something..."); 
-        Main.es.execute(() -> {
+        Handler.es.execute(() -> {
           try {
             while (!recv.isClosed() && recv.isConnected()) {
               boolean closeConnection = parseRequest(recv, args);

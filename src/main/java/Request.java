@@ -58,6 +58,10 @@ public class Request {
         String firstLine = requestSplit[0];
         Map<String, String> headers = parseHeaders(fullRequest);
         String[] request_line = firstLine.split(" ");
+        if (request_line.length < 3) {
+            return null;
+        }
+        System.out.println("FIR"+firstLine+"ST");
         System.out.println("Total split of header: " + request_line.length);
         String url = request_line[1].strip();
         Request req = new Request();
