@@ -22,7 +22,7 @@ public class Main {
   public static ExecutorService es = Executors.newFixedThreadPool(10);
   
 
-  public static void parseRequest(Socket sock, String[] args) throws Exception {
+  public static boolean parseRequest(Socket sock, String[] args) throws Exception {
     Request req = Request.fromInputStream(sock.getInputStream());
     var url_parts = List.of(req.urlPath.split("/"));
     
@@ -94,7 +94,6 @@ public class Main {
         res.setResponseBody("");
         res.addHeader("Content-Length", String.valueOf(compressed_payload.length));
         sendResponse(sock, Misc.concat(res.toFlatResponse().getBytes(), compressed_payload));
-        return;
       } else {
         res.setResponseBody(response_body);
       }
@@ -119,13 +118,14 @@ public class Main {
   }
   if ("close".equalsIgnoreCase(req.headers.get("Connection"))) {
     sock.close();
+    return true;
   } else {
     sock.setKeepAlive(true);
     // sock.shutdownInput();
     // sock.shutdownOutput();
     System.out.println("Keep connection alive");
   }
-  
+  return false;
   
 }
 
@@ -156,7 +156,10 @@ public static void notFound(Socket sock) throws IOException {
         Main.es.execute(() -> {
           try {
             while (!recv.isClosed() && recv.isConnected()) {
-              parseRequest(recv, args);
+              boolean closeConnection = parseRequest(recv, args);
+              if (closeConnection) {
+                break;
+              }
               System.out.println("Sent the response");
               
             }
