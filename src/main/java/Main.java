@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 
 public class Main {
-  public static ExecutorService es = Executors.newFixedThreadPool(10);
+  public static ExecutorService es = Executors.newFixedThreadPool(1);
   
 
   public static void parseRequest(Socket sock, String[] args) throws Exception {
@@ -130,37 +130,36 @@ public class Main {
   }
 
   public static void sendResponse(Socket sock, byte[] content) throws IOException {
-    try (sock) {
-      sock.getOutputStream().write(content);
-      sock.getOutputStream().flush();
-    }
+    sock.getOutputStream().write(content);
+    sock.getOutputStream().flush();
   }
 
   public static void main(String[] args) throws IOException {
     System.out.println("Starting the server...");
-    ServerSocket serverSocket = null;
-    try {
-      serverSocket = new ServerSocket(4221);
-    
+    try (ServerSocket serverSocket = new ServerSocket(4221)) {
       serverSocket.setReuseAddress(true);
+      
       while (true) {
+        
         Socket recv = serverSocket.accept();
         System.out.println("Got something..."); 
         Main.es.execute(() -> {
           try {
-            parseRequest(recv, args);
-            System.out.println("Sent the response");
+            while (!recv.isInputShutdown()) {
+              parseRequest(recv, args);
+              System.out.println("Sent the response");
+              recv.shutdownInput();
+              recv.shutdownOutput();
+            }
           } catch (Exception e) {
             e.printStackTrace();
           }
         });
+        recv.setKeepAlive(true);
+        recv.setTcpNoDelay(true);
       }
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
-    } finally {
-      if (serverSocket != null && !serverSocket.isClosed()) {
-        serverSocket.close();
-      }
     }
   }
 }
