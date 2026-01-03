@@ -148,7 +148,7 @@ public class Main {
             while (!recv.isInputShutdown()) {
               parseRequest(recv, args);
               System.out.println("Sent the response");
-              // recv.shutdownInput();
+              recv.shutdownInput();
               // recv.shutdownOutput();
             }
           } catch (Exception e) {
