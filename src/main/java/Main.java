@@ -24,6 +24,14 @@ public class Main {
 
   public static void parseRequest(Socket sock, String[] args) throws Exception {
     Request req = Request.fromInputStream(sock.getInputStream());
+    if ("close".equalsIgnoreCase(req.headers.get("Connection"))) {
+      sock.close();
+    } else {
+      sock.setKeepAlive(true);
+      // sock.shutdownInput();
+      // sock.shutdownOutput();
+      System.out.println("Keep connection alive");
+    }
     var url_parts = List.of(req.urlPath.split("/"));
 
     if (req.urlPath.equals("/")) {
@@ -118,14 +126,7 @@ public class Main {
       notFound(sock);
     }
 
-    if ("close".equalsIgnoreCase(req.headers.get("Connection"))) {
-      sock.close();
-    } else {
-      sock.setKeepAlive(true);
-      // sock.shutdownInput();
-      // sock.shutdownOutput();
-      System.out.println("Keep connection alive");
-    }
+    
   }
 
   public static void notFound(Socket sock) throws IOException {
